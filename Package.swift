@@ -12,9 +12,16 @@ let package = Package(
             targets: ["ToolBoxiOS"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/kakao/kakao-ios-sdk.git", branch: "master")
+    ],
     targets: [
         .target(
-            name: "ToolBoxiOS"
+            name: "ToolBoxiOS",
+            dependencies: [
+                // 2. 필요한 모듈 명시 (User, Auth, Common)
+                .product(name: "KakaoSDK", package: "kakao-ios-sdk"),
+            ]
         ),
         .testTarget(
             name: "ToolBoxiOSTests",
