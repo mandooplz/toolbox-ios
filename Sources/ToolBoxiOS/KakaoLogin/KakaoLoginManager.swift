@@ -25,7 +25,7 @@ public final class KakaoLoginManager: Sendable {
     private let appKey: String
     private var isSetUp: Bool = false
     
-    public private(set) var authToken: String? = nil
+    public private(set) var authToken: AuthToken? = nil
     public func removeAuthToken() {
         self.authToken = nil
     }
@@ -55,7 +55,7 @@ public final class KakaoLoginManager: Sendable {
         }
         
         // process
-        let oauthToken: AuthToken? = await withCheckedContinuation { continuation in
+        let authToken: AuthToken? = await withCheckedContinuation { continuation in
             guard UserApi.isKakaoTalkLoginAvailable() == true else {
                 continuation.resume(returning: nil)
                 return
@@ -83,7 +83,7 @@ public final class KakaoLoginManager: Sendable {
         }
         
         // mutate
-        self.authToken = oauthToken?.accessToken
+        self.authToken = authToken
     }
     public func loginWithWebBrowser() async {
         // capture
@@ -96,37 +96,36 @@ public final class KakaoLoginManager: Sendable {
             return
         }
         
+        
         // process
+        let authToken: AuthToken? = await withCheckedContinuation { continuation in
+            UserApi.shared.loginWithKakaoAccount {[weak self] (oauthToken, error) in
+                guard error == nil else {
+                    self?.logger.error("\(error)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+                
+                guard let oauthToken else {
+                    self?.logger.error("웹브라우저로 카카오 로그인은 성공했으나, oauthToken이 없습니다. (정상적인 상황은 아닙니다.)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+                
+                let authToken = AuthToken(oauthToken)
+                continuation.resume(returning: authToken)
+                
+                self?.logger.debug("웹브라우저를 통해 카카오 로그인을 성공했습니다.")
+            }
+        }
         
         
         // mutate
-        
-        fatalError("구현 예정입니다.")
+        self.authToken = authToken
     }
     
     
     // MARK: value
-    /// 토큰별 역할과 만료 시간 (Kakao OAuth)
-    ///
-    /// - Access Token
-    ///   - 역할: API 요청 시 사용자 인증 및 권한 보유 증명에 사용
-    ///   - 만료 시간:
-    ///     - Android / iOS: 12시간
-    ///     - JavaScript: 2시간
-    ///     - REST API: 6시간
-    ///
-    /// - Refresh Token
-    ///   - 역할: 추가 인증 없이 Access Token 갱신
-    ///   - 만료 시간: 2달
-    ///   - 만료 1달 전부터 갱신 가능
-    ///   - 중요: 토큰 갱신 요청 시
-    ///           새로운 Refresh Token이 발급되며
-    ///           기존 Refresh Token은 폐기됨
-    ///
-    /// - ID Token
-    ///   - 역할: 로그인 세션에서 사용 가능한 사용자 인증 정보 제공
-    ///   - 비고: OpenID Connect 활성화 필요
-    ///   - 만료 시간: Access Token과 동일
     public struct AuthToken: Sendable, Hashable {
         // MARK: core
         let idToken: String?
