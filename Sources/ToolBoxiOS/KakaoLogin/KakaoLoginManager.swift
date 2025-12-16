@@ -30,6 +30,24 @@ public final class KakaoLoginManager: Sendable {
         self.authToken = nil
     }
     
+    public func logout() async {
+        guard isSetUp == true else {
+            logger.error("SetUp이 되어 있지 않습니다. KakaoLoginManager.setUp() 호출이 필요합니다.")
+            return
+        }
+        
+        await withCheckedContinuation { continuation in
+            UserApi.shared.logout { [weak self] error in
+                if let error {
+                    self?.logger.error("\(error)")
+                }
+                
+                self?.authToken = nil
+                continuation.resume()
+            }
+        }
+    }
+    
     
     // MARK: action
     public func setUp() {
@@ -50,7 +68,7 @@ public final class KakaoLoginManager: Sendable {
             return
         }
         guard self.authToken == nil else {
-            logger.error("이미 로그인된 상태입니다. KakaoLoginManager.logout() 호출 후 시도해주세요.")
+            logger.error("이미 로그인된 상태입니다. KakaoLoginManager.logout() 또는 KakaoLoginManager.removeAuthToken() 호출 후 시도해주세요.")
             return
         }
         
@@ -92,7 +110,7 @@ public final class KakaoLoginManager: Sendable {
             return
         }
         guard self.authToken == nil else {
-            logger.error("이미 로그인된 상태입니다. KakaoLoginManager.logout() 호출 후 시도해주세요.")
+            logger.error("이미 로그인된 상태입니다. KakaoLoginManager.logout() 또는 KakaoLoginManager.removeAuthToken() 호출 후 시도해주세요.")
             return
         }
         
@@ -128,15 +146,15 @@ public final class KakaoLoginManager: Sendable {
     // MARK: value
     public struct AuthToken: Sendable, Hashable {
         // MARK: core
-        let idToken: String?
+        public let idToken: String?
         
-        let accessToken: String
-        let expiredAt: Date
+        public let accessToken: String
+        public let expiredAt: Date
         
-        let refreshToken: String
-        let refreshTokenExpiredAt: Date
+        public let refreshToken: String
+        public let refreshTokenExpiredAt: Date
         
-        let scopes: [String]?
+        public let scopes: [String]?
         
         fileprivate init(_ token: OAuthToken) {
             self.idToken = token.idToken
