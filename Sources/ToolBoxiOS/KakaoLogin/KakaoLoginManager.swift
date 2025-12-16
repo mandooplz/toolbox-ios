@@ -6,20 +6,25 @@
 //
 import Foundation
 import KakaoSDKCommon
+import KakaoSDKUser
+import OSLog
 
 
 // MARK: Object
 @MainActor @Observable
 public final class KakaoLoginManager: Sendable {
     // MARK: core
+    private nonisolated let logger = Logger()
     public init(appKey: String) {
         self.appKey = appKey
     }
     
     
     // MARK: state
-    private var isSetUp: Bool = false
     private let appKey: String
+    private var isSetUp: Bool = false
+    
+    public var authToken: String? = nil
     
     
     // MARK: action
@@ -33,7 +38,22 @@ public final class KakaoLoginManager: Sendable {
         // mutate
         self.isSetUp = true
     }
-    public func login() async {
+    public func loginWithKakaoApp() async {
+        // capture
         
+        // process
+        
+        // mutate
+        
+        fatalError("구현 예정입니다.")
+    }
+    public func loginWithWebBrowser() async {
+        // capture
+        
+        // process
+        
+        // mutate
+        
+        fatalError("구현 예정입니다.")
     }
 }
